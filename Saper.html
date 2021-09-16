@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        @font-face {
+            font-family: 'Henny Penny';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Henny Penny'), local('HennyPenny-Regular'), url(https://fonts.gstatic.com/s/hennypenny/v7/wXKvE3UZookzsxz_kjGSfPQtvXI.woff2) format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
+        body {
+            font-family: Henny Penny;
+        }
+
+        button {
+            font-family: Henny Penny;
+            width: 120px;
+            height: 40px;
+        }
+
+        #divmenu {
+            width: 260px;
+            margin: 0 auto;
+        }
+
+        label {
+            width: 80px;
+            margin-bottom: 10px;
+            display: inline-block;
+
+        }
+
+        #divcounter {
+            margin: 0 auto;
+            margin-top: 15px;
+            width: 200px;
+            height: 30px;
+            text-align: center;
+
+        }
+
+        button {
+            margin: 0 auto;
+            margin-top: 15px;
+            font-size: 1em;
+        }
+
+        #table {
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .tableclass {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-image: url(img/klepa.png);
+            background-size: cover;
+            text-align: center;
+            border: 1px solid gray;
+
+        }
+
+        .reveled {
+            background-image: none;
+        }
+
+        #bombcountdiv {
+            margin: 0 auto;
+            padding: 10px;
+            width: 200px;
+            height: 50px;
+            text-align: center;
+        }
+
+        #main {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #recordsdiv {
+            position: absolute;
+            top: 0px;
+            right: 50px;
+        }
+
+        #recordsdiv>ul>li {
+            display: inline-block;
+            font-size: 22px;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        //generowanie strony
+        let bt = document.createElement("button")
+        let div = document.createElement("div")
+        let form = document.createElement("form")
+        let divmenu = document.createElement("div")
+        let maindiv = document.createElement("div")
+        maindiv.id = "main"
+        let generatecountchecker = false
+        document.body.appendChild(maindiv)
+        maindiv.appendChild(form)
+        maindiv.appendChild(divmenu)
+        divmenu.id = "divmenu"
+        divmenu.appendChild(form)
+        let endgame
+        for (let i = 1; i <= 3; i++) {
+            let label = document.createElement("label")
+            let input = document.createElement("input")
+            input.type = "text"
+            if (i == 1) {
+                input.id = "height"
+                label.innerText = "Height : "
+                label.htmlFor = "height"
+            } else if (i == 2) {
+                input.id = "width"
+                label.innerText = "Width :  "
+                label.htmlFor = "width"
+            } else if (i == 3) {
+                input.id = "bombs"
+                label.innerText = "Bombs : "
+                label.htmlFor = "bombs"
+            }
+            form.appendChild(label)
+            form.appendChild(input)
+        }
+
+        maindiv.appendChild(bt)
+        maindiv.appendChild(div)
+        bt.innerText = "Generuj"
+        div.id = "divcounter"
+        bt.onclick = buttonClick
+        let bombcountdiv = document.createElement("div")
+        bombcountdiv.id = "bombcountdiv"
+        maindiv.append(bombcountdiv)
+        const heightinput = document.getElementById("height")
+        const widthinput = document.getElementById("width")
+        const bombsinput = document.getElementById("bombs")
+        let timid
+        document.getElementById("bombcountdiv").innerHTML = "Pozostało: 0 bomb"
+        document.getElementById("divcounter").innerHTML = "Czas: 0[s]"
+        const recordsdiv = document.createElement("div")
+        recordsdiv.id = "recordsdiv"
+        document.body.appendChild(recordsdiv)
+        //check poprawności zawartości inputów
+        function checkInput() {
+            let checkInputid = setTimeout(function () {
+                if (isNaN(heightinput.value)) {
+                    heightinput.value = ""
+                    return false
+                }
+                if (isNaN(widthinput.value)) {
+                    widthinput.value = ""
+                    return false
+                }
+                if (isNaN(bombsinput.value)) {
+                    bombsinput.value = ""
+                    return false
+                }
+
+            }, 1000)
+        }
+        heightinput.oninput = checkInput
+        widthinput.oninput = checkInput
+        bombsinput.oninput = checkInput
+
+        //check wpisania we wszystkie inputy
+        function checkInInput() {
+            if (heightinput.value == "" || widthinput.value == "" || bombsinput.value == "") {
+                alert("Uzupełnij wszystkie rubryki")
+                return false
+            } else if (parseInt(bombsinput.value) >= (parseInt(heightinput.value) * parseInt(widthinput.value))) {
+                alert("Liczba bomb nie może być większa lub równa wielkości planszy")
+                return false
+            }
+        }
+
+        //timer
+        let currenttime
+
+        function timer() {
+            currenttime = 0
+            let x = document.getElementById("divcounter")
+            x.innerHTML = "Czas: " + currenttime + "[s]" + "<br>"
+            timid = window.setInterval(function () {
+                currenttime++
+                x.innerHTML = "Czas: " + currenttime + "[s]" + "<br>"
+
+            }, 1000)
+            for (let j = 1; j < timid; j++) {
+                window.clearInterval(j)
+            }
+            document.getElementById("bombcountdiv").innerHTML = "Pozostało: " + bombsinput.value + " bomb"
+        }
+
+        //generowanie tablicy
+        function saperArray() {
+            const rows = Math.round(parseInt(heightinput.value))
+            const cols = Math.round(parseInt(widthinput.value))
+            const bombs = Math.round(parseInt(bombsinput.value))
+            gametable = []
+            elementindex = 0
+            for (let i = 1; i <= rows; i++) {
+                for (let j = 1; j <= cols; j++) {
+                    gametable.push([i, j])
+                    elementindex++
+                }
+            }
+            //losowanie bomb 
+            bombindexlist = []
+            for (let k = 0; k < bombs; k++) {
+                indexexists = true
+                while (indexexists) {
+                    bombindex = Math.floor(Math.random() * Math.floor(gametable.length))
+                    if (bombindexlist.includes(bombindex) === false) {
+                        bombindexlist.push(bombindex)
+                        indexexists = false
+                    }
+                }
+            }
+            for (let m = 0; m < bombs; m++) {
+                gametable[bombindexlist[m]][2] = 1
+            }
+            for (let n = 0; n < gametable.length; n++) {
+                if (gametable[n][2] != 1) {
+                    gametable[n][2] = 0
+                }
+            }
+            //sortowanie bomb index
+            bombindexlist.sort((a, b) => {
+                return a - b
+            })
+        }
+        //tworzenie planszy
+        function createGameTable() {
+            if (generatecountchecker) {
+                document.getElementById("table").remove()
+            }
+            let table = document.createElement("div")
+            table.id = "table"
+            table.style.width = widthinput.value * 22 + "px"
+            maindiv.append(table)
+            let top = 0
+            let left = 0
+            let tabledivnumer = 0
+            let bombchecker = 0
+            let idcounter = 0
+            for (let i = 0; i < heightinput.value; i++) {
+                for (let j = 0; j < widthinput.value; j++) {
+                    let tabledivs = document.createElement("div")
+                    tabledivs.classList.add("tableclass")
+                    table.append(tabledivs)
+                    tabledivs.style.top = top + "px"
+                    tabledivs.style.left = left + "px"
+                    left += 22
+                    tabledivs.id = gametable[idcounter][1] + "_" + gametable[idcounter][0]
+                    idcounter++
+                    if (tabledivnumer == bombindexlist[bombchecker]) {
+                        tabledivs.classList.add("bomb")
+                        bombchecker++
+                    }
+                    tabledivnumer++
+                }
+                left = 0
+                top += 22
+            }
+            generatecountchecker = true
+            bombindex = []
+            tabledivnumer = 1
+            bombchecker = 0
+            endgame = false
+        }
+
+
+        //puste pole
+
+        function emptySquares() {
+            let tabledivs = document.getElementsByClassName("tableclass")
+            for (let i = 0; i < tabledivs.length; i++) {
+                if (tabledivs[i].classList[1] != "bomb")
+                    tabledivs[i].classList.add("notbomb")
+            }
+
+        }
+
+        //odrywanie pól
+
+        function clickAction() {
+            let firstclick = true
+            if (firstclick) {
+                saperArray()
+            }
+            let currentdiv = this
+            reveal(currentdiv)
+            const alldivs = document.getElementsByClassName("reveled")
+            let alldivswinlenght = (widthinput.value * heightinput.value) - bombsinput.value
+            if (alldivs.length == alldivswinlenght) {
+                win()
+            }
+        }
+
+        function reveal(x) {
+            if (x.classList.contains("flagged"))
+                x.classList.remove("flagged")
+            if (x.classList.contains("unknown"))
+                x.classList.remove("unknown")
+            x.classList.add("reveled")
+            x.style.backgroundImage = "none"
+            //liczba bomb w około
+            let thisid = x.id.split("_")
+            nearbydivs = [{
+                    x: parseInt(thisid[0]) - 1,
+                    y: parseInt(thisid[1]) - 1
+                },
+                {
+                    x: parseInt(thisid[0]),
+                    y: parseInt(thisid[1]) - 1
+                },
+                {
+                    x: parseInt(thisid[0]) + 1,
+                    y: parseInt(thisid[1]) - 1
+                }, {
+                    x: parseInt(thisid[0]) - 1,
+                    y: parseInt(thisid[1])
+                },
+                {
+                    x: parseInt(thisid[0]) + 1,
+                    y: parseInt(thisid[1])
+                },
+                {
+                    x: parseInt(thisid[0]) - 1,
+                    y: parseInt(thisid[1]) + 1
+                }, {
+                    x: parseInt(thisid[0]),
+                    y: parseInt(thisid[1]) + 1
+                }, {
+                    x: parseInt(thisid[0]) + 1,
+                    y: parseInt(thisid[1]) + 1
+                }
+            ]
+            let correctnearbydivs = nearbydivs.filter(element => element.x > 0 && element.x <= widthinput.value &&
+                element.y > 0 && element.y <= heightinput.value)
+            var bombcounter = 0
+            correctnearbydivs.forEach(element => {
+                const thisdiv = document.getElementById(element.x + "_" + element.y)
+                if (thisdiv.classList.contains("bomb")) {
+                    bombcounter++
+                }
+            })
+            x.innerText = bombcounter.toString()
+            let uncovereddivs = correctnearbydivs.filter(element => !(document.getElementById(element.x + "_" + element
+                .y).classList.contains("reveled")))
+            // kolor czcionki
+            if (bombcounter == 0) {
+                uncovereddivs.forEach(element => {
+                    let currentdiv = document.getElementById(element.x + "_" + element.y)
+                    reveal(currentdiv)
+                })
+            }
+            if (bombcounter == 1) {
+                x.style.color = "blue"
+            }
+            if (bombcounter == 2) {
+                x.style.color = "green"
+            }
+            if (bombcounter == 3) {
+                x.style.color = "red"
+            }
+            if (bombcounter == 4) {
+                x.style.color = "darkblue"
+            }
+            if (bombcounter == 5) {
+                x.style.color = "purple"
+            }
+            if (bombcounter == 6) {
+                x.style.color = "brown"
+            }
+            if (bombcounter == 7) {
+                x.style.color = "orange"
+            }
+            if (bombcounter == 8) {
+                x.style.color = "darkyellow"
+            }
+        }
+
+        function uncover() {
+            let divswithoutbombs = document.getElementsByClassName("notbomb")
+            for (let i = 0; i < divswithoutbombs.length; i++) {
+                divswithoutbombs[i].addEventListener("click", clickAction, true)
+            }
+        }
+
+        //funkcja do addevent listenera
+        function loseClick() {
+            lose()
+            this.style.backgroundImage =
+                "url(img/bomb.png)"
+        }
+
+        //bomby addevent listener
+        function bombPlacer() {
+            let divswithbombs = document.getElementsByClassName("bomb")
+            for (let i = 0; i < bombsinput.value; i++) {
+                divswithbombs[i].addEventListener("click", loseClick, true)
+            }
+        }
+
+        //prawy przycisk dodawanie zdarzenie  
+        let rightClickFunction
+
+        function flaging() {
+            let gametabledivs = document.getElementsByClassName("tableclass")
+            let bombcount = bombsinput.value
+            let bombdiv = document.getElementById("bombcountdiv")
+            for (let i = 0; i < gametabledivs.length; i++) {
+                const element = gametabledivs[i]
+                element.addEventListener("contextmenu", rightClickFunction = function (element) {
+                    if (!endgame) {
+                        element.preventDefault()
+                        const thisdiv = gametabledivs[i]
+                        if (!(thisdiv.classList.contains("reveled"))) {
+                            if (thisdiv.classList.contains("flaged")) {
+                                thisdiv.style.backgroundImage = "url(img/pyt.png)"
+                                thisdiv.classList.remove("flaged")
+                                thisdiv.classList.add("unknown")
+                                bombcount++
+
+                            } else if (thisdiv.classList.contains("unknown")) {
+                                thisdiv.style.backgroundImage = "url(img/klepa.png)"
+                                thisdiv.classList.remove("unknown")
+                            } else {
+                                thisdiv.style.backgroundImage = "url(img/flaga.png)"
+                                thisdiv.classList.add("flaged")
+                                bombcount--
+
+                            }
+                            bombdiv.innerHTML = "Pozostało: " + bombcount + " bomb"
+                            const bombsdivs = document.getElementsByClassName("bomb")
+                            let flagedbombchecker = 0
+                            for (let i = 0; i < bombsdivs.length; i++) {
+                                if (bombsdivs[i].classList.contains("flaged")) {
+                                    flagedbombchecker++
+                                }
+                            }
+                            if (flagedbombchecker == bombsinput.value && bombcount == 0) {
+                                win()
+                            }
+                        }
+                    }
+                }, true)
+            }
+        }
+
+
+        //mechanizm przegranej
+        function lose() {
+            clearTimeout(timid)
+            let divswithbombs = document.getElementsByClassName("bomb")
+            for (let i = 0; i < bombsinput.value; i++) {
+                divswithbombs[i].style.backgroundImage = "url(img/pbomb.png)"
+            }
+            let losealert = setTimeout(
+                () => {
+                    alert("Przegrałeś")
+                }, 100)
+            document.getElementById("bombcountdiv").innerHTML = "Pozostało: 0 bomb"
+            const alldivs = document.getElementsByClassName("tableclass")
+            for (let j = 0; j < alldivs.length; j++) {
+                alldivs[j].removeEventListener("click", clickAction, true)
+                alldivs[j].removeEventListener("contextmenu", rightClickFunction, true)
+            }
+            for (let j = 0; j < divswithbombs.length; j++) {
+                divswithbombs[j].removeEventListener("click", loseClick, true)
+            }
+            endgame = true
+            return true
+        }
+
+        //mechanizm wygranej 
+
+        function win() {
+            clearTimeout(timid)
+            document.getElementById("bombcountdiv").innerHTML = "Pozostało: 0 bomb"
+            let winalert = setTimeout(
+                () => {
+                    const winner = prompt(
+                        "Gratulacje !!! Wpisz ponizej swój nick, aby świat o tobie nie zapomniał :P ")
+                    if (winner) {
+                        addCookies(winner)
+                        makeScoreboard()
+                    }
+                }, 100)
+            let divswithbombs = document.getElementsByClassName("bomb")
+            let gametabledivs = document.getElementsByClassName("tableclass")
+            for (let i = 0; i < bombsinput.value; i++) {
+                divswithbombs[i].style.backgroundImage = "url(img/pbomb.png)"
+                divswithbombs[i].removeEventListener("click", loseClick, true)
+                gametabledivs[i].removeEventListener("click", clickAction, true)
+                gametabledivs[i].removeEventListener("context", rightClickFunction, true)
+            }
+            endgame = true
+        }
+
+        //dodanie plików cookie
+
+        function addCookies(winprompt) {
+            if (winprompt) {
+                const mode = heightinput.value + "-" + widthinput.value + "-" + bombsinput.value
+                const winner = mode + "_" + encodeURIComponent(winprompt.toString()) + "_" + currenttime
+                    .toString() +
+                    ";"
+                const existingwinners = document.cookie.split("=")[1]
+                if (typeof (existingwinners) != "undefined") {
+                    document.cookie = "records=" + existingwinners + ":" + winner + ";max-age = 99999999;"
+                } else {
+                    document.cookie = "records=" + winner + ";max-age = 99999999;"
+                }
+            }
+        }
+
+        //stworzenie tablicy z rekordami
+
+        function makeScoreboard() {
+            const mode = heightinput.value + "-" + widthinput.value + "-" + bombsinput.value
+            const recordslist = document.cookie.split("=")[1].split(":").map(element => element.split("_"))
+            let allrecordsincurrentmode = recordslist.filter(element => element[0] == mode)
+            allrecordsincurrentmode.sort((a, b) => {
+                return a[2] - b[2]
+            }).slice(0, 10)
+            const recordsdiv = document.getElementById("recordsdiv")
+            recordsdiv.innerHTML = ""
+            for (let i = 0; i < allrecordsincurrentmode.length; i++) {
+                const ul = document.createElement("ul")
+                const li1 = document.createElement("li")
+                const li2 = document.createElement("li")
+                li1.innerHTML = "Nick: " + decodeURIComponent(allrecordsincurrentmode[i][1])
+                li2.innerHTML = "Czas: " + allrecordsincurrentmode[i][2] + "[s]"
+                recordsdiv.appendChild(ul)
+                ul.appendChild(li1)
+                ul.appendChild(li2)
+            }
+
+        }
+        // wywoływanie funkcji
+
+        function buttonClick() {
+            if (checkInInput() != false) {
+                timer()
+                saperArray()
+                createGameTable()
+                emptySquares()
+                uncover()
+                bombPlacer()
+                flaging()
+                if (document.cookie != "") {
+                    makeScoreboard()
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
